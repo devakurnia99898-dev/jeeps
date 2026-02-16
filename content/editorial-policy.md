@@ -1,22 +1,25 @@
 ---
-title: "Editorial Policy & Standards"
-description: "Our commitment to accuracy, integrity, and transparent journalism."
+title: "Editorial Policy"
+description: "How we create, verify, and maintain high-quality automotive content."
 draft: false
 layout: "page"
 ---
 
-## 1. Commitment to Accuracy
-Trust is the currency of journalism. At beastion.biz.id, we employ a rigorous fact-checking process. Every article is reviewed for statistical accuracy and factual correctness. If an error occurs, we are committed to correcting it promptly and transparently with a standardized "Correction Note" at the bottom of the article.
+At **VesLife**, trust is our currency. Our editorial process is designed to ensure accuracy, objectivity, and value for our readers.
 
-## 2. Sourcing & Attribution
-We believe in giving credit where it is due.
-*   **Official Sources:** We prioritize data from official league bodies, clubs, and reputable data providers (Opta/StatsPerform).
-*   **Transfer News:** We distinguish between "Official Confirmations," "Reports from Credible Outlets," and "Rumors." We do not publish unsubstantiated clickbait.
+## 1. Fact-Checking & Accuracy
+We take great care to verify technical specifications (horsepower, torque, towing capacity) against official manufacturer data (OEM) and reliable industry sources. If a rumor is reported, it is clearly labeled as "Rumor" or "Speculation," distinct from confirmed news.
 
-## 3. Use of Technology & AI
-beastion.biz.id utilizes advanced technology to assist in data aggregation, trend monitoring, and structuring historical data. However, **human oversight is mandatory**.
-*   AI tools are used as *assistants* for research and structure.
-*   All opinions, tactical breakdowns, and final editorial approvals are conducted by human analysts to ensure nuance, context, and emotional intelligence.
+## 2. AI & Technology Usage
+To maintain a high volume of coverage across the automotive industry, our editorial team utilizes advanced technology, including Artificial Intelligence (AI), to assist in data aggregation, structuring, and initial drafting.
 
-## 4. Conflict of Interest
-Our writers and analysts are required to disclose any potential conflicts of interest. beastion.biz.id maintains strict independence from any football club, agency, or betting organization.
+However, **Human Oversight is Mandatory.**
+*   Every article is reviewed by our editorial staff (e.g., Dave Harsya) before publication.
+*   AI is used as a tool for research assistance, not as a replacement for human judgment and automotive expertise.
+*   We fact-check AI-generated drafts against real-world mechanical knowledge.
+
+## 3. Corrections Policy
+We are committed to correcting errors promptly. If you believe we have published incorrect information (e.g., wrong engine code for a specific model year), please contact us immediately. We will review the claim and update the article with a correction note if necessary.
+
+## 4. No Pay-for-Play
+We do not accept payment in exchange for positive reviews of car parts, accessories, or vehicles. Sponsored content, if ever published, will be clearly marked as "Sponsored" or "Advertisement."

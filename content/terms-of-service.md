@@ -1,21 +1,34 @@
 ---
 title: "Terms of Service"
-description: "Rules and regulations for using beastion.biz.id."
+description: "Terms and Conditions regarding the use of VesLife.biz.id."
 draft: false
 layout: "page"
 ---
 
-## 1. Terms
-By accessing this Website, accessible from beastion.biz.id, you are agreeing to be bound by these Website Terms and Conditions of Use and agree that you are responsible for the agreement with any applicable local laws.
+*Last Updated: February 16, 2026*
 
-## 2. Use License
-Permission is granted to temporarily download one copy of the materials on beastion.biz.id's Website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
+## 1. Introduction
+Welcome to **VesLife.biz.id** ("VesLife", "we", "us"). By accessing this website, you agree to be bound by these Terms and Conditions, all applicable laws and regulations, and agree that you are responsible for compliance with any applicable local laws.
 
-## 3. Disclaimer
-All the materials on beastion.biz.id’s Website are provided "as is". beastion.biz.id makes no warranties, may it be expressed or implied, therefore negates all other warranties. Furthermore, beastion.biz.id does not make any representations concerning the accuracy or likely results of the use of the materials on its Website or otherwise relating to such materials.
+## 2. Intellectual Property Rights
+Other than the content you own, under these Terms, VesLife and/or its licensors own all the intellectual property rights and materials contained in this Website. You are granted limited license only for purposes of viewing the material contained on this Website.
 
-## 4. Limitations
-beastion.biz.id or its suppliers will not be hold accountable for any damages that will arise with the use or inability to use the materials on beastion.biz.id’s Website, even if beastion.biz.id or an authorize representative of this Website has been notified, orally or written, of the possibility of such damage.
+## 3. Restrictions
+You are specifically restricted from all of the following:
+*   Publishing any Website material in any other media without attribution.
+*   Selling, sublicensing, and/or otherwise commercializing any Website material.
+*   Using this Website in any way that is or may be damaging to this Website.
+*   Using this Website in any way that impacts user access to this Website.
 
-## 5. Governing Law
-Any claim related to beastion.biz.id's Website shall be governed by the laws without regards to its conflict of law provisions.
+## 4. Limitation of Liability (Automotive Disclaimer)
+**VesLife.biz.id is an automotive news and enthusiast commentary site.**
+
+*   **No Professional Advice:** The content provided on this website is for informational and entertainment purposes only. It does not constitute professional mechanical, engineering, or financial advice.
+*   **Risk Assumption:** Modification of vehicles (lifting, engine tuning, etc.) and off-road driving involve inherent risks. You agree that VesLife is not liable for any damage to your vehicle, voiding of warranties, or personal injury resulting from the application of information found on this site.
+*   **"As Is" Basis:** All materials on VesLife are provided "as is". We make no warranties, expressed or implied.
+
+## 5. External Links
+VesLife has not reviewed all of the sites linked to its website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by VesLife. Use of any such linked website is at the user's own risk.
+
+## 6. Governing Law
+These terms and conditions are governed by and construed in accordance with the laws of Indonesia and you irrevocably submit to the exclusive jurisdiction of the courts in that location.

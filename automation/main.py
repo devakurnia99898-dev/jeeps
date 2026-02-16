@@ -31,7 +31,7 @@ except ImportError:
 GROQ_KEYS_RAW = os.environ.get("GROQ_API_KEY", "") 
 GROQ_API_KEYS = [k.strip() for k in GROQ_KEYS_RAW.split(",") if k.strip()]
 
-WEBSITE_URL = "https://beastion.biz.id" 
+WEBSITE_URL = "https://veslife.biz.id" 
 INDEXNOW_KEY = "e74819b68a0f40e98f6ec3dc24f610f0" 
 GOOGLE_JSON_KEY = os.environ.get("GOOGLE_INDEXING_KEY", "") 
 

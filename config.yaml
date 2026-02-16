@@ -1,6 +1,6 @@
-baseURL: "https://beastion.biz.id/"
+baseURL: "https://jeeps.pages.dev/"
 languageCode: "en-us"
-title: "beastion.biz.id"
+title: "JeepMe"
 canonifyURLs: true
 
 permalinks:

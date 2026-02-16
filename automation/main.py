@@ -25,7 +25,7 @@ except ImportError:
     GOOGLE_LIBS_AVAILABLE = False
 
 # ==========================================
-# ⚙️ CONFIGURATION & SETUP (JEEP / OFFROAD NICHE)
+# ⚙️ CONFIGURATION & SETUP (VESLIFE / JEEP NICHE)
 # ==========================================
 
 GROQ_KEYS_RAW = os.environ.get("GROQ_API_KEY", "") 
@@ -39,13 +39,13 @@ if not GROQ_API_KEYS:
     print("❌ FATAL ERROR: Groq API Key is missing!")
     exit(1)
 
-# Penulis dengan Persona Spesifik (Gaya Bahasa Berbeda)
+# Penulis dengan Otoritas (E-E-A-T)
 AUTHOR_PROFILES = [
-    "Dave Harsya (Off-road Specialist)", 
-    "Sarah Jenkins (Auto Gear Editor)",
-    "Luca Romano (Jeep Restorer)", 
-    "Marcus Reynolds (4x4 Tech Analyst)",
-    "Ben Foster (Overlanding Expert)"
+    "Dave Harsya (Lead Off-road Specialist)", 
+    "Sarah Jenkins (Automotive Engineer)",
+    "Luca Romano (Classic Jeep Restorer)", 
+    "Marcus Reynolds (4x4 Technical Analyst)",
+    "Ben Foster (Overlanding Guide)"
 ]
 
 # Kategori Spesifik
@@ -66,8 +66,9 @@ IMAGE_DIR = "static/images"
 DATA_DIR = "automation/data"
 MEMORY_FILE = f"{DATA_DIR}/link_memory.json"
 
-# 🔥 UPDATE: Naikkan target agar script mengambil lebih banyak artikel per run
-TARGET_PER_SOURCE = 3 
+# 🔥 TARGET: 2 Artikel per sumber per run (Total 8 artikel).
+# Jeda antar artikel 2 menit agar terlihat natural (Organic Drip Feed).
+TARGET_PER_SOURCE = 2
 
 # ==========================================
 # 🧠 HELPER FUNCTIONS
@@ -90,15 +91,17 @@ def get_internal_links_list():
     memory = load_link_memory()
     items = list(memory.items())
     if not items: return []
-    # Ambil 3 link acak
+    # Ambil 3 link acak untuk internal linking
     count = min(3, len(items))
     return random.sample(items, count)
 
 def fetch_rss_feed(url):
-    """Fungsi mengambil data RSS."""
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    """Fungsi vital untuk mengambil data RSS."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=15)
         return feedparser.parse(response.content) if response.status_code == 200 else None
     except: return None
 
@@ -108,9 +111,9 @@ def clean_ai_content(text):
     text = re.sub(r'\n```$', '', text)
     text = text.replace("```", "")
     
-    # 1. Hapus Header Basi (Double Safety)
-    # Jika AI bandel tetap menulis Introduction/Conclusion, kita hapus paksa via Regex
-    text = re.sub(r'^##\s*(Introduction|Conclusion|Summary|The Verdict|Final Thoughts)\s*\n', '', text, flags=re.MULTILINE|re.IGNORECASE)
+    # 1. Hapus Header Klise (Introduction/Conclusion)
+    # Ini agar artikel langsung to-the-point (Hard Lead)
+    text = re.sub(r'^##\s*(Introduction|Conclusion|Summary|The Verdict|Final Thoughts|In Conclusion)\s*\n', '', text, flags=re.MULTILINE|re.IGNORECASE)
     
     # 2. Konversi HTML tag dasar ke Markdown
     text = text.replace("<h1>", "# ").replace("</h1>", "\n")
@@ -123,7 +126,7 @@ def clean_ai_content(text):
     return text.strip()
 
 # ==========================================
-# 💉 SMART LINK INJECTION (TENGAH ARTIKEL)
+# 💉 SMART LINK INJECTION
 # ==========================================
 def inject_links_into_body(content_body):
     """
@@ -147,7 +150,6 @@ def inject_links_into_body(content_body):
         return content_body + link_box
 
     # Tentukan posisi (acak antara paragraf 2 atau 3)
-    # Ini memastikan posisi Read More tidak monoton
     insert_pos = random.randint(1, 2) 
     
     # Sisipkan
@@ -187,7 +189,7 @@ def submit_to_google(url):
         print(f"      ⚠️ Google Indexing Error: {e}")
 
 # ==========================================
-# 🎨 IMAGE GENERATOR
+# 🎨 ROBUST IMAGE GENERATOR
 # ==========================================
 def generate_robust_image(prompt, filename):
     output_path = f"{IMAGE_DIR}/{filename}"
@@ -200,7 +202,7 @@ def generate_robust_image(prompt, filename):
 
     print(f"      🎨 Generating Image...")
 
-    # 1. Hercai AI
+    # 1. Hercai AI (Best Quality)
     try:
         visual_style = ", realistic, 4k, automotive photography, Jeep offroad, cinematic lighting, mud splashes, detailed grille"
         hercai_url = f"https://hercai.onrender.com/v3/text2image?prompt={requests.utils.quote(clean_prompt + visual_style)}"
@@ -215,7 +217,7 @@ def generate_robust_image(prompt, filename):
                 return f"/images/{filename}"
     except Exception: pass
 
-    # 2. Pollinations Turbo
+    # 2. Pollinations Turbo (Fast)
     try:
         seed = random.randint(1, 99999)
         poly_url = f"https://image.pollinations.ai/prompt/{requests.utils.quote('Jeep ' + clean_prompt)}?width=1280&height=720&model=turbo&seed={seed}&nologo=true"
@@ -227,9 +229,9 @@ def generate_robust_image(prompt, filename):
             return f"/images/{filename}"
     except Exception: pass
 
-    # 3. Fallback Flickr
+    # 3. Fallback Flickr (Fail-safe)
     try:
-        flickr_url = f"https://loremflickr.com/1280/720/jeep,wrangler,4x4/all"
+        flickr_url = f"https://loremflickr.com/1280/720/jeep,wrangler,offroad/all"
         resp = requests.get(flickr_url, headers=headers, timeout=20, allow_redirects=True)
         if resp.status_code == 200:
             img = Image.open(BytesIO(resp.content)).convert("RGB")
@@ -241,13 +243,13 @@ def generate_robust_image(prompt, filename):
     return "/images/default-jeep.webp"
 
 # ==========================================
-# 🧠 CONTENT ENGINE (NO INTRO/OUTRO + H2/H3/H4)
+# 🧠 CONTENT ENGINE (PRO WITH TABLES)
 # ==========================================
 
 def get_groq_article_json(title, summary, link, author_name):
     current_date = datetime.now().strftime("%Y-%m-%d")
     
-    # Randomize Structure Strategy untuk keunikan
+    # Struktur Dinamis
     structures = [
         "TECHNICAL_BREAKDOWN (Deep dive into specs, engine codes, suspension geometry)",
         "MARKET_IMPACT (How this affects values, competitors like Bronco/4Runner)",
@@ -256,25 +258,29 @@ def get_groq_article_json(title, summary, link, author_name):
     ]
     chosen_structure = random.choice(structures)
 
+    # Prompt Engineering Tingkat Tinggi
     system_prompt = f"""
-    You are {author_name}, a veteran automotive journalist who writes for hardcore Jeep enthusiasts.
+    You are {author_name}, a veteran automotive journalist and engineer.
     Current Date: {current_date}.
     
-    OBJECTIVE: Write a high-quality, professional article.
+    OBJECTIVE: Write a high-quality, data-rich article about Jeep/Off-road.
     STRUCTURE STYLE: {chosen_structure}.
     
     🚫 NEGATIVE CONSTRAINTS (STRICTLY FORBIDDEN):
     1. NEVER use headers named "Introduction", "Conclusion", "Summary", "The End".
     2. NEVER start with "In this article...", "Welcome to...", or "Today we discuss...".
-    3. Start directly with a Hook or the News Lead.
     
-    ✅ POSITIVE REQUIREMENTS (MANDATORY):
-    1. **HIERARCHY IS KING**: Use Markdown headers strictly:
+    ✅ POSITIVE REQUIREMENTS (MANDATORY FOR GOOGLE INDEXING):
+    1. **DATA TABLE IS A MUST**: You MUST include a Markdown Table in the article. 
+       - If it's a news piece: Create a "Key Facts" table.
+       - If it's a car review: Create a "Specs & Performance" table.
+       - If it's a guide: Create a "Pros vs Cons" table or "Tools Needed" table.
+    2. **HIERARCHY IS KING**: Use Markdown headers strictly:
        - H2 (##) for Main Themes.
-       - H3 (###) for Sub-topics (e.g., "The Pentastar V6 Issue").
-       - H4 (####) for Granular Details (e.g., "Torque Curves", "Interior Stitching").
-    2. **TONE**: Professional, knowledgeable, slightly rugged.
-    3. **WORD COUNT**: Approx 800-1200 words.
+       - H3 (###) for Sub-topics.
+       - H4 (####) for Granular Details.
+    3. **TONE**: Professional, knowledgeable, slightly rugged.
+    4. **WORD COUNT**: Approx 800-1200 words.
     
     OUTPUT FORMAT (JSON):
     {{
@@ -283,7 +289,7 @@ def get_groq_article_json(title, summary, link, author_name):
         "category": "One of: {', '.join(VALID_CATEGORIES)}",
         "main_keyword": "Visual prompt for image generation",
         "tags": ["tag1", "tag2", "tag3"],
-        "content_body": "The full markdown article content here..."
+        "content_body": "The full markdown article content here (including the Table)..."
     }}
     """
     
@@ -293,7 +299,7 @@ def get_groq_article_json(title, summary, link, author_name):
     - Summary: {summary}
     - Link: {link}
     
-    Write the article now. Remember: NO Introduction header. Go deep with H2/H3/H4.
+    Write the article now. Remember: INCLUDE A TABLE and NO Intro Header.
     """
     
     for api_key in GROQ_API_KEYS:
@@ -325,7 +331,7 @@ def main():
     os.makedirs(IMAGE_DIR, exist_ok=True)
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    print("🔥 ENGINE STARTED: JEEP PRO EDITION (H2/H3/H4 + NO INTRO)")
+    print("🔥 ENGINE STARTED: VESLIFE PRO EDITION (TABLES + DRIP FEED)")
 
     for source_name, rss_url in RSS_SOURCES.items():
         print(f"\n📡 Reading: {source_name}")
@@ -335,7 +341,7 @@ def main():
         processed_count = 0
         
         for entry in feed.entries:
-            # Check Limit
+            # Check Limit per Source
             if processed_count >= TARGET_PER_SOURCE:
                 print(f"   🛑 Target reached for {source_name}")
                 break
@@ -406,10 +412,12 @@ weight: {random.randint(1, 10)}
             submit_to_google(full_url)
 
             print(f"      ✅ Published: {slug}")
-            
-            # Increment counter HANYA jika berhasil publish
             processed_count += 1
-            time.sleep(5)
+            
+            # 🔥 ANTI-SPAM DELAY (2 Menit)
+            # Ini sangat penting agar Google tidak menganggap situs Anda spam
+            print("      💤 Sleeping for 120s (Natural Drip Feed)...")
+            time.sleep(120)
 
 if __name__ == "__main__":
     main()

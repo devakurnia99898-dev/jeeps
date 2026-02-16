@@ -25,4 +25,4 @@ Disallow: /
 User-agent: meta-externalagent
 Disallow: /
 
-Sitemap: https://beastion.biz.id/sitemap.xml
+Sitemap: https://veslife.biz.id/sitemap.xml

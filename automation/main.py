@@ -25,13 +25,13 @@ except ImportError:
     GOOGLE_LIBS_AVAILABLE = False
 
 # ==========================================
-# ⚙️ CONFIGURATION & SETUP (JEEP NICHE)
+# ⚙️ CONFIGURATION & SETUP (JEEP / OFFROAD NICHE)
 # ==========================================
 
 GROQ_KEYS_RAW = os.environ.get("GROQ_API_KEY", "") 
 GROQ_API_KEYS = [k.strip() for k in GROQ_KEYS_RAW.split(",") if k.strip()]
 
-WEBSITE_URL = "https://jeeps.pages.dev" 
+WEBSITE_URL = "https://beastion.biz.id" 
 INDEXNOW_KEY = "e74819b68a0f40e98f6ec3dc24f610f0" 
 GOOGLE_JSON_KEY = os.environ.get("GOOGLE_INDEXING_KEY", "") 
 
@@ -39,20 +39,19 @@ if not GROQ_API_KEYS:
     print("❌ FATAL ERROR: Groq API Key is missing!")
     exit(1)
 
-# Diubah: Profil penulis menjadi nuansa otomotif/off-road
+# Penulis dengan Persona Spesifik
 AUTHOR_PROFILES = [
     "Dave Harsya (Off-road Specialist)", "Sarah Jenkins (Auto Gear Editor)",
     "Luca Romano (Jeep Restorer)", "Marcus Reynolds (4x4 Tech Analyst)",
     "Ben Foster (Overlanding Expert)"
 ]
 
-# Diubah: Kategori spesifik Jeep
+# Kategori Spesifik
 VALID_CATEGORIES = [
     "Wrangler & Gladiator", "Grand Cherokee", "Concept News", 
     "Off-Road Guides", "Technical Specs", "EV & Hybrid 4xe"
 ]
 
-# Diubah: Sumber RSS khusus Jeep dan Otomotif
 RSS_SOURCES = {
     "Autoblog Jeep": "https://www.autoblog.com/category/jeep/rss.xml",
     "Motor1 Jeep": "https://www.motor1.com/rss/make/jeep/",
@@ -79,35 +78,66 @@ def save_link_to_memory(title, slug):
     os.makedirs(DATA_DIR, exist_ok=True)
     memory = load_link_memory()
     memory[title] = f"/articles/{slug}" 
+    # Simpan max 200 link terakhir agar relevan
     if len(memory) > 200: memory = dict(list(memory.items())[-200:])
     with open(MEMORY_FILE, 'w') as f: json.dump(memory, f, indent=2)
 
-def get_internal_links_markdown():
+def get_internal_links_list():
+    """Mengembalikan list link (judul, url) untuk disisipkan."""
     memory = load_link_memory()
     items = list(memory.items())
-    if not items: return ""
-    count = min(4, len(items))
-    selected_items = random.sample(items, count)
-    return "\n".join([f"- [{title}]({url})" for title, url in selected_items])
-
-def fetch_rss_feed(url):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        return feedparser.parse(response.content) if response.status_code == 200 else None
-    except: return None
+    if not items: return []
+    # Ambil 3 link acak
+    count = min(3, len(items))
+    return random.sample(items, count)
 
 def clean_ai_content(text):
     if not text: return ""
     text = re.sub(r'^```[a-zA-Z]*\n', '', text)
     text = re.sub(r'\n```$', '', text)
     text = text.replace("```", "")
+    
+    # Konversi HTML tag dasar ke Markdown jika AI bandel
     text = text.replace("<h1>", "# ").replace("</h1>", "\n")
     text = text.replace("<h2>", "## ").replace("</h2>", "\n")
     text = text.replace("<h3>", "### ").replace("</h3>", "\n")
+    text = text.replace("<h4>", "#### ").replace("</h4>", "\n") # Handle H4
     text = text.replace("<b>", "**").replace("</b>", "**")
     text = text.replace("<p>", "").replace("</p>", "\n\n")
     return text.strip()
+
+# ==========================================
+# 💉 SMART LINK INJECTION (FITUR BARU)
+# ==========================================
+def inject_links_into_body(content_body):
+    """
+    Menyisipkan link di tengah artikel (setelah paragraf 2 atau 3).
+    Bukan di bawah.
+    """
+    links = get_internal_links_list()
+    if not links:
+        return content_body
+
+    # Format kotak link yang cantik
+    link_box = "\n\n> **🚙 Recommended Reading:**\n"
+    for title, url in links:
+        link_box += f"> - [{title}]({url})\n"
+    link_box += "\n"
+
+    # Pecah konten berdasarkan double newline (paragraf)
+    paragraphs = content_body.split('\n\n')
+    
+    # Jika artikel terlalu pendek, taruh di akhir saja
+    if len(paragraphs) < 4:
+        return content_body + link_box
+
+    # Tentukan posisi (acak antara paragraf 2 atau 3)
+    insert_pos = random.randint(1, 2) 
+    
+    # Sisipkan
+    paragraphs.insert(insert_pos, link_box)
+    
+    return "\n\n".join(paragraphs)
 
 # ==========================================
 # 🚀 INDEXING FUNCTIONS
@@ -141,11 +171,10 @@ def submit_to_google(url):
         print(f"      ⚠️ Google Indexing Error: {e}")
 
 # ==========================================
-# 🎨 ROBUST IMAGE GENERATOR (SURVIVAL MODE)
+# 🎨 IMAGE GENERATOR
 # ==========================================
 def generate_robust_image(prompt, filename):
     output_path = f"{IMAGE_DIR}/{filename}"
-    
     clean_prompt = prompt.replace('"', '').replace("'", "")
     
     headers = {
@@ -155,96 +184,101 @@ def generate_robust_image(prompt, filename):
 
     print(f"      🎨 Generating Image...")
 
-    # --- ATTEMPT 1: HERCAI API (AI Generator) ---
+    # 1. Hercai AI
     try:
-        # Diubah: Menambahkan keyword visual spesifik Jeep/Automotive
-        visual_style = ", realistic, 4k, automotive photography, Jeep offroad, cinematic lighting"
+        visual_style = ", realistic, 4k, automotive photography, Jeep offroad, cinematic lighting, mud splashes"
         hercai_url = f"https://hercai.onrender.com/v3/text2image?prompt={requests.utils.quote(clean_prompt + visual_style)}"
         resp = requests.get(hercai_url, headers=headers, timeout=40)
-        
         if resp.status_code == 200:
             data = resp.json()
             if "url" in data:
-                img_url = data["url"]
-                img_data = requests.get(img_url, headers=headers, timeout=20).content
+                img_data = requests.get(data["url"], headers=headers, timeout=20).content
                 img = Image.open(BytesIO(img_data)).convert("RGB")
                 img.save(output_path, "WEBP", quality=90)
                 print("      ✅ Image Saved (Source: Hercai AI)")
                 return f"/images/{filename}"
-    except Exception as e:
-        print(f"      ⚠️ Hercai Failed: {e}")
+    except Exception: pass
 
-    # --- ATTEMPT 2: POLLINATIONS TURBO (AI Generator) ---
+    # 2. Pollinations Turbo
     try:
-        print("      🔄 Trying Pollinations Turbo...")
         seed = random.randint(1, 99999)
-        # Diubah: Prompt untuk mobil
         poly_url = f"https://image.pollinations.ai/prompt/{requests.utils.quote('Jeep ' + clean_prompt)}?width=1280&height=720&model=turbo&seed={seed}&nologo=true"
         resp = requests.get(poly_url, headers=headers, timeout=20)
-        
         if resp.status_code == 200:
             img = Image.open(BytesIO(resp.content)).convert("RGB")
             img.save(output_path, "WEBP", quality=90)
             print("      ✅ Image Saved (Source: Pollinations Turbo)")
             return f"/images/{filename}"
-        else:
-             print(f"      ⚠️ Pollinations Blocked ({resp.status_code})")
-    except Exception:
-        pass
+    except Exception: pass
 
-    # --- ATTEMPT 3: REAL PHOTO FALLBACK (LoremFlickr) ---
+    # 3. Fallback Flickr
     try:
-        print("      🔄 Trying Real Photo Fallback (LoremFlickr)...")
-        # Diubah: Keyword pencarian gambar asli menjadi Jeep
-        keywords = "jeep,wrangler,offroad,4x4"
-        flickr_url = f"https://loremflickr.com/1280/720/{keywords}/all"
-        
+        flickr_url = f"https://loremflickr.com/1280/720/jeep,wrangler,4x4/all"
         resp = requests.get(flickr_url, headers=headers, timeout=20, allow_redirects=True)
         if resp.status_code == 200:
             img = Image.open(BytesIO(resp.content)).convert("RGB")
             img.save(output_path, "WEBP", quality=90)
-            print("      ✅ Image Saved (Source: Real Photo/Flickr)")
+            print("      ✅ Image Saved (Source: Real Photo)")
             return f"/images/{filename}"
-    except Exception as e:
-        print(f"      ⚠️ Flickr Fallback Failed: {e}")
+    except Exception: pass
 
-    # --- EMERGENCY: DEFAULT ---
-    print("      ⚠️ ALL METHODS FAILED. Using static default.")
-    # Pastikan Anda memiliki gambar default ini atau script akan error saat build
     return "/images/default-jeep.webp"
 
 # ==========================================
-# 🧠 CONTENT ENGINE
+# 🧠 CONTENT ENGINE (STRUCTURED)
 # ==========================================
 
 def get_groq_article_json(title, summary, link, author_name):
     current_date = datetime.now().strftime("%Y-%m-%d")
     
-    # Diubah: System Prompt untuk Jurnalis Otomotif
+    # Randomize Structure Strategy untuk keunikan
+    structures = [
+        "TECHNICAL_DEEP_DIVE (Focus on engine, suspension, specs with H2, H3, H4)",
+        "NEWS_ANALYSIS (Impact on market, future predictions, pros/cons)",
+        "BUYERS_GUIDE (What to look for, trim levels comparison, pricing)",
+        "HISTORY_VS_MODERN (Comparing this model to its predecessors)"
+    ]
+    chosen_structure = random.choice(structures)
+
     system_prompt = f"""
-    You are {author_name}, a professional automotive journalist specializing in the Jeep brand and off-road culture.
-    CURRENT DATE: {current_date}.
+    You are {author_name}, a veteran automotive journalist.
+    Current Date: {current_date}.
     
-    OBJECTIVE: Write a high-quality, 800-word analysis article about Jeep vehicles or industry news.
+    OBJECTIVE: Write a high-quality, professional article about Jeep/Off-road.
+    STRUCTURE STYLE: {chosen_structure}.
     
-    OUTPUT FORMAT:
-    JSON Object keys: "title", "description", "category", "main_keyword", "tags", "content_body".
-    "main_keyword" should be a short visual description for image generation (e.g. "red Jeep Wrangler rubbing mud", "Jeep Gladiator interior", "Jeep grille close up").
+    CRITICAL REQUIREMENTS:
+    1. **HIERARCHY IS MANDATORY**: You MUST use Markdown headers strictly:
+       - H2 (##) for Main Sections.
+       - H3 (###) for Sub-points (e.g., Specific Engine variant, Interior details).
+       - H4 (####) for Niche Details (e.g., Torque specs, Infotainment version).
+    2. **NO FLUFF**: Do not use generic intros. Dive straight into value.
+    3. **WORD COUNT**: Approx 800-1000 words.
+    
+    OUTPUT FORMAT (JSON):
+    {{
+        "title": "Catchy SEO Title",
+        "description": "Meta description (150 chars)",
+        "category": "One of: {', '.join(VALID_CATEGORIES)}",
+        "main_keyword": "Visual prompt for image generation",
+        "tags": ["tag1", "tag2", "tag3"],
+        "content_body": "The full markdown article content here..."
+    }}
     """
     
     user_prompt = f"""
-    SOURCE:
+    SOURCE MATERIAL:
     - Headline: {title}
     - Summary: {summary}
     - Link: {link}
     
-    TASK: Write the article now using MARKDOWN. Focus on technical details, performance, or lifestyle appeal.
+    Write the article now. Ensure H2, H3, and H4 are used to create a deep, structured reading experience.
     """
     
     for api_key in GROQ_API_KEYS:
         client = Groq(api_key=api_key)
         try:
-            print(f"      🤖 AI Writing ({author_name})...")
+            print(f"      🤖 AI Writing ({chosen_structure.split()[0]})...")
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
@@ -252,7 +286,7 @@ def get_groq_article_json(title, summary, link, author_name):
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.6,
-                max_tokens=6000,
+                max_tokens=6500,
                 response_format={"type": "json_object"}
             )
             return completion.choices[0].message.content
@@ -270,7 +304,7 @@ def main():
     os.makedirs(IMAGE_DIR, exist_ok=True)
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    print("🔥 ENGINE STARTED: JEEP EDITION (SURVIVAL MODE)")
+    print("🔥 ENGINE STARTED: JEEP PRO EDITION (H2/H3/H4 MODE)")
 
     for source_name, rss_url in RSS_SOURCES.items():
         print(f"\n📡 Reading: {source_name}")
@@ -300,18 +334,21 @@ def main():
                 print("      ❌ JSON Parse Error")
                 continue
 
-            # Generate Image (Dengan keyword Jeep)
+            # 1. Generate Image
             image_prompt = data.get('main_keyword', clean_title)
             final_img_path = generate_robust_image(image_prompt, f"{slug}.webp")
             
-            # Clean & Save
+            # 2. Clean Content
             clean_body = clean_ai_content(data['content_body'])
-            links_md = get_internal_links_markdown()
-            final_body = clean_body + "\n\n### Read More\n" + links_md
             
+            # 3. Inject Links in MIDDLE (Smart Injection)
+            final_body_with_links = inject_links_into_body(clean_body)
+            
+            # 4. Fallback Category
             if data.get('category') not in VALID_CATEGORIES:
-                data['category'] = "Jeep News" # Default fallback category
+                data['category'] = "Jeep News"
 
+            # 5. Create Markdown File
             md_content = f"""---
 title: "{data['title'].replace('"', "'")}"
 date: {datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")}
@@ -326,7 +363,7 @@ draft: false
 weight: {random.randint(1, 10)}
 ---
 
-{final_body}
+{final_body_with_links}
 
 ---
 *Reference: Analysis by {author} based on reports from [{source_name}]({entry.link}).*
@@ -334,6 +371,7 @@ weight: {random.randint(1, 10)}
             with open(f"{CONTENT_DIR}/{filename}", "w", encoding="utf-8") as f:
                 f.write(md_content)
             
+            # 6. Save & Index
             save_link_to_memory(data['title'], slug)
             
             full_url = f"{WEBSITE_URL}/articles/{slug}/"

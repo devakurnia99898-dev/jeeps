@@ -1,32 +1,38 @@
 ---
 title: "About Us"
-description: "fbeastion.biz.id bridges the gap between casual fandom and professional tactical analysis."
+description: "beastion.biz.id is the premier digital destination for Jeep enthusiasts, offering deep dives into 4x4 engineering, restoration culture, and trail-rated news."
 draft: false
 layout: "page"
 ---
 
-## The Mission
+## The Mission: Built for the Wild
 
-**beastion.biz.id** was founded with a singular ambition: to elevate Sports journalism beyond the box score. In an era of clickbait and recycled rumors, we stand for **Deep Contextual Analysis**.
+**beastion.biz.id** (JeepJournal) was founded with a singular ambition: to be the definitive garage for the modern off-road enthusiast. In an era of generic automotive press releases, we stand for **Authentic 4x4 Culture**.
 
-We believe that Sports is not just about *what* happened, but *why* it happened. Our coverage combines traditional reporting with modern advanced metrics (xG, PPDA, Heatmaps) to provide a comprehensive understanding of the beautiful game.
+We believe that a Jeep is not just a vehicle; it is a platform for adventure and a canvas for engineering. We go beyond the showroom specs. We explore the heritage of the Seven Slots, from the battlefields of 1941 to the electric trails of tomorrow.
 
-## Our Approach: Data Meets Passion
+## Our Philosophy: Engineering Meets Adventure
 
-We are a "Digital-First" newsroom leveraging advanced technology and data pipelines to track 6 major competitions:
-*   Premier League
-*   La Liga
-*   UEFA Champions League
-*   International Tournaments
-*   Transfer Markets
+We are a "Digital-First" automotive newsroom that bridges the gap between professional mechanical analysis and the passionate community of owners. We track the pulse of the industry across key pillars:
 
-However, data is nothing without interpretation. Our editorial team, led by Senior Analyst **Dave Harsya**, ensures that every statistic tells a story. We don't just list numbers; we explain their tactical implications on the pitch.
+*   **Wrangler & Gladiator:** The core of the open-air lifestyle.
+*   **Grand Cherokee & Luxury SUVs:** Where capability meets comfort.
+*   **Future Tech (4xe):** Analyzing the hybrid revolution in off-roading.
+*   **Restoration & Mods:** Celebrating the "Built, Not Bought" mentality.
+
+However, data is nothing without real-world application. Our editorial team, led by Lead Off-road Specialist **Dave Harsya**, ensures that every article focuses on what matters: reliability, capability, and the ownership experience. We don't just list torque numbers; we explain what they mean when you are crawling over rocks at a 30-degree incline.
 
 ## Why Trust Us?
 
-*   **Accuracy First:** We verify transfer rumors against Tier-1 sources before publishing.
-*   **Objectivity:** While we love the game, our analysis remains unbiased. We praise rivals and critique favorites based on performance, not emotion.
-*   **Speed & Depth:** We strive to be the first to break the news and the best at explaining it.
+To maintain the highest standards of automotive journalism, we adhere to three core principles:
+
+1.  **Technical Accuracy:** We verify technical specifications and recall data against official manufacturer documents (Stellantis/Mopar) before publishing.
+2.  **Unbiased Analysis:** While we love the brand, we are not beholden to it. If a new transmission has issues or a design choice hurts approach angles, we report it honestly.
+3.  **Respect for Heritage:** We understand that a CJ-7 is as important as a new Rubicon. Our content respects the lineage that made this brand an icon.
+
+## Editorial Standards
+
+beastion.biz.id is an independent publication and is not officially affiliated with FCA US LLC or the Jeep® brand. All product names, logos, and brands are property of their respective owners. Our content is intended for educational and informational purposes, helping owners make informed decisions about their vehicles.
 
 ---
-*fbeastion.biz.id is an independent digital publication committed to the highest standards of Sportss journalism.*
+*Join us on the trail. Whether you are looking for the latest 4xe news or tips for your next overlanding build, welcome to the family.*

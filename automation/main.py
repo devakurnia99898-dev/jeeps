@@ -91,6 +91,14 @@ def get_internal_links_list():
     count = min(3, len(items))
     return random.sample(items, count)
 
+def fetch_rss_feed(url):
+    """Fungsi mengambil data RSS."""
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        return feedparser.parse(response.content) if response.status_code == 200 else None
+    except: return None
+
 def clean_ai_content(text):
     if not text: return ""
     text = re.sub(r'^```[a-zA-Z]*\n', '', text)

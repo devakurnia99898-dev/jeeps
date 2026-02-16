@@ -39,10 +39,12 @@ if not GROQ_API_KEYS:
     print("❌ FATAL ERROR: Groq API Key is missing!")
     exit(1)
 
-# Penulis dengan Persona Spesifik
+# Penulis dengan Persona Spesifik (Gaya Bahasa Berbeda)
 AUTHOR_PROFILES = [
-    "Dave Harsya (Off-road Specialist)", "Sarah Jenkins (Auto Gear Editor)",
-    "Luca Romano (Jeep Restorer)", "Marcus Reynolds (4x4 Tech Analyst)",
+    "Dave Harsya (Off-road Specialist)", 
+    "Sarah Jenkins (Auto Gear Editor)",
+    "Luca Romano (Jeep Restorer)", 
+    "Marcus Reynolds (4x4 Tech Analyst)",
     "Ben Foster (Overlanding Expert)"
 ]
 
@@ -63,7 +65,9 @@ CONTENT_DIR = "content/articles"
 IMAGE_DIR = "static/images"
 DATA_DIR = "automation/data"
 MEMORY_FILE = f"{DATA_DIR}/link_memory.json"
-TARGET_PER_SOURCE = 1 
+
+# 🔥 UPDATE: Naikkan target agar script mengambil lebih banyak artikel per run
+TARGET_PER_SOURCE = 3 
 
 # ==========================================
 # 🧠 HELPER FUNCTIONS
@@ -78,7 +82,6 @@ def save_link_to_memory(title, slug):
     os.makedirs(DATA_DIR, exist_ok=True)
     memory = load_link_memory()
     memory[title] = f"/articles/{slug}" 
-    # Simpan max 200 link terakhir agar relevan
     if len(memory) > 200: memory = dict(list(memory.items())[-200:])
     with open(MEMORY_FILE, 'w') as f: json.dump(memory, f, indent=2)
 
@@ -105,29 +108,33 @@ def clean_ai_content(text):
     text = re.sub(r'\n```$', '', text)
     text = text.replace("```", "")
     
-    # Konversi HTML tag dasar ke Markdown jika AI bandel
+    # 1. Hapus Header Basi (Double Safety)
+    # Jika AI bandel tetap menulis Introduction/Conclusion, kita hapus paksa via Regex
+    text = re.sub(r'^##\s*(Introduction|Conclusion|Summary|The Verdict|Final Thoughts)\s*\n', '', text, flags=re.MULTILINE|re.IGNORECASE)
+    
+    # 2. Konversi HTML tag dasar ke Markdown
     text = text.replace("<h1>", "# ").replace("</h1>", "\n")
     text = text.replace("<h2>", "## ").replace("</h2>", "\n")
     text = text.replace("<h3>", "### ").replace("</h3>", "\n")
-    text = text.replace("<h4>", "#### ").replace("</h4>", "\n") # Handle H4
+    text = text.replace("<h4>", "#### ").replace("</h4>", "\n")
     text = text.replace("<b>", "**").replace("</b>", "**")
     text = text.replace("<p>", "").replace("</p>", "\n\n")
+    
     return text.strip()
 
 # ==========================================
-# 💉 SMART LINK INJECTION (FITUR BARU)
+# 💉 SMART LINK INJECTION (TENGAH ARTIKEL)
 # ==========================================
 def inject_links_into_body(content_body):
     """
     Menyisipkan link di tengah artikel (setelah paragraf 2 atau 3).
-    Bukan di bawah.
     """
     links = get_internal_links_list()
     if not links:
         return content_body
 
     # Format kotak link yang cantik
-    link_box = "\n\n> **🚙 Recommended Reading:**\n"
+    link_box = "\n\n> **🚙 Don't Miss:**\n"
     for title, url in links:
         link_box += f"> - [{title}]({url})\n"
     link_box += "\n"
@@ -140,6 +147,7 @@ def inject_links_into_body(content_body):
         return content_body + link_box
 
     # Tentukan posisi (acak antara paragraf 2 atau 3)
+    # Ini memastikan posisi Read More tidak monoton
     insert_pos = random.randint(1, 2) 
     
     # Sisipkan
@@ -194,7 +202,7 @@ def generate_robust_image(prompt, filename):
 
     # 1. Hercai AI
     try:
-        visual_style = ", realistic, 4k, automotive photography, Jeep offroad, cinematic lighting, mud splashes"
+        visual_style = ", realistic, 4k, automotive photography, Jeep offroad, cinematic lighting, mud splashes, detailed grille"
         hercai_url = f"https://hercai.onrender.com/v3/text2image?prompt={requests.utils.quote(clean_prompt + visual_style)}"
         resp = requests.get(hercai_url, headers=headers, timeout=40)
         if resp.status_code == 200:
@@ -233,7 +241,7 @@ def generate_robust_image(prompt, filename):
     return "/images/default-jeep.webp"
 
 # ==========================================
-# 🧠 CONTENT ENGINE (STRUCTURED)
+# 🧠 CONTENT ENGINE (NO INTRO/OUTRO + H2/H3/H4)
 # ==========================================
 
 def get_groq_article_json(title, summary, link, author_name):
@@ -241,31 +249,36 @@ def get_groq_article_json(title, summary, link, author_name):
     
     # Randomize Structure Strategy untuk keunikan
     structures = [
-        "TECHNICAL_DEEP_DIVE (Focus on engine, suspension, specs with H2, H3, H4)",
-        "NEWS_ANALYSIS (Impact on market, future predictions, pros/cons)",
-        "BUYERS_GUIDE (What to look for, trim levels comparison, pricing)",
-        "HISTORY_VS_MODERN (Comparing this model to its predecessors)"
+        "TECHNICAL_BREAKDOWN (Deep dive into specs, engine codes, suspension geometry)",
+        "MARKET_IMPACT (How this affects values, competitors like Bronco/4Runner)",
+        "ENTHUSIAST_PERSPECTIVE (Modding potential, trail capability focus)",
+        "HISTORICAL_CONTEXT (Comparing to CJ/YJ/TJ/JK legacy)"
     ]
     chosen_structure = random.choice(structures)
 
     system_prompt = f"""
-    You are {author_name}, a veteran automotive journalist.
+    You are {author_name}, a veteran automotive journalist who writes for hardcore Jeep enthusiasts.
     Current Date: {current_date}.
     
-    OBJECTIVE: Write a high-quality, professional article about Jeep/Off-road.
+    OBJECTIVE: Write a high-quality, professional article.
     STRUCTURE STYLE: {chosen_structure}.
     
-    CRITICAL REQUIREMENTS:
-    1. **HIERARCHY IS MANDATORY**: You MUST use Markdown headers strictly:
-       - H2 (##) for Main Sections.
-       - H3 (###) for Sub-points (e.g., Specific Engine variant, Interior details).
-       - H4 (####) for Niche Details (e.g., Torque specs, Infotainment version).
-    2. **NO FLUFF**: Do not use generic intros. Dive straight into value.
-    3. **WORD COUNT**: Approx 800-1000 words.
+    🚫 NEGATIVE CONSTRAINTS (STRICTLY FORBIDDEN):
+    1. NEVER use headers named "Introduction", "Conclusion", "Summary", "The End".
+    2. NEVER start with "In this article...", "Welcome to...", or "Today we discuss...".
+    3. Start directly with a Hook or the News Lead.
+    
+    ✅ POSITIVE REQUIREMENTS (MANDATORY):
+    1. **HIERARCHY IS KING**: Use Markdown headers strictly:
+       - H2 (##) for Main Themes.
+       - H3 (###) for Sub-topics (e.g., "The Pentastar V6 Issue").
+       - H4 (####) for Granular Details (e.g., "Torque Curves", "Interior Stitching").
+    2. **TONE**: Professional, knowledgeable, slightly rugged.
+    3. **WORD COUNT**: Approx 800-1200 words.
     
     OUTPUT FORMAT (JSON):
     {{
-        "title": "Catchy SEO Title",
+        "title": "Catchy SEO Title (No Clickbait)",
         "description": "Meta description (150 chars)",
         "category": "One of: {', '.join(VALID_CATEGORIES)}",
         "main_keyword": "Visual prompt for image generation",
@@ -280,7 +293,7 @@ def get_groq_article_json(title, summary, link, author_name):
     - Summary: {summary}
     - Link: {link}
     
-    Write the article now. Ensure H2, H3, and H4 are used to create a deep, structured reading experience.
+    Write the article now. Remember: NO Introduction header. Go deep with H2/H3/H4.
     """
     
     for api_key in GROQ_API_KEYS:
@@ -312,22 +325,28 @@ def main():
     os.makedirs(IMAGE_DIR, exist_ok=True)
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    print("🔥 ENGINE STARTED: JEEP PRO EDITION (H2/H3/H4 MODE)")
+    print("🔥 ENGINE STARTED: JEEP PRO EDITION (H2/H3/H4 + NO INTRO)")
 
     for source_name, rss_url in RSS_SOURCES.items():
         print(f"\n📡 Reading: {source_name}")
         feed = fetch_rss_feed(rss_url)
         if not feed: continue
 
-        processed = 0
+        processed_count = 0
+        
         for entry in feed.entries:
-            if processed >= TARGET_PER_SOURCE: break
+            # Check Limit
+            if processed_count >= TARGET_PER_SOURCE:
+                print(f"   🛑 Target reached for {source_name}")
+                break
             
             clean_title = entry.title.split(" - ")[0]
             slug = slugify(clean_title, max_length=60, word_boundary=True)
             filename = f"{slug}.md"
             
+            # Skip if Exists (Tapi tidak break loop, cari next article)
             if os.path.exists(f"{CONTENT_DIR}/{filename}"): 
+                # print(f"   ⏩ Skipping (Exists): {clean_title[:30]}...") 
                 continue
             
             print(f"   ⚡ Processing: {clean_title[:40]}...")
@@ -346,7 +365,7 @@ def main():
             image_prompt = data.get('main_keyword', clean_title)
             final_img_path = generate_robust_image(image_prompt, f"{slug}.webp")
             
-            # 2. Clean Content
+            # 2. Clean Content (Hapus Intro/Conclusion Headers)
             clean_body = clean_ai_content(data['content_body'])
             
             # 3. Inject Links in MIDDLE (Smart Injection)
@@ -387,7 +406,9 @@ weight: {random.randint(1, 10)}
             submit_to_google(full_url)
 
             print(f"      ✅ Published: {slug}")
-            processed += 1
+            
+            # Increment counter HANYA jika berhasil publish
+            processed_count += 1
             time.sleep(5)
 
 if __name__ == "__main__":

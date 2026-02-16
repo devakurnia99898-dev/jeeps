@@ -1,13 +1,13 @@
 ---
 title: "About Us"
-description: "beastion.biz.id is the premier digital destination for Jeep enthusiasts, offering deep dives into 4x4 engineering, restoration culture, and trail-rated news."
+description: "VesLife.biz.id is the premier digital destination for Jeep enthusiasts, offering deep dives into 4x4 engineering, restoration culture, and trail-rated news."
 draft: false
 layout: "page"
 ---
 
 ## The Mission: Built for the Wild
 
-**beastion.biz.id** (JeepJournal) was founded with a singular ambition: to be the definitive garage for the modern off-road enthusiast. In an era of generic automotive press releases, we stand for **Authentic 4x4 Culture**.
+**veslife.biz.id** (VesLife 4x4) was founded with a singular ambition: to be the definitive garage for the modern off-road enthusiast. In an era of generic automotive press releases, we stand for **Authentic 4x4 Culture**.
 
 We believe that a Jeep is not just a vehicle; it is a platform for adventure and a canvas for engineering. We go beyond the showroom specs. We explore the heritage of the Seven Slots, from the battlefields of 1941 to the electric trails of tomorrow.
 
@@ -22,7 +22,7 @@ We are a "Digital-First" automotive newsroom that bridges the gap between profes
 
 However, data is nothing without real-world application. Our editorial team, led by Lead Off-road Specialist **Dave Harsya**, ensures that every article focuses on what matters: reliability, capability, and the ownership experience. We don't just list torque numbers; we explain what they mean when you are crawling over rocks at a 30-degree incline.
 
-## Why Trust Us?
+## Why Trust VesLife?
 
 To maintain the highest standards of automotive journalism, we adhere to three core principles:
 
@@ -32,7 +32,7 @@ To maintain the highest standards of automotive journalism, we adhere to three c
 
 ## Editorial Standards
 
-beastion.biz.id is an independent publication and is not officially affiliated with FCA US LLC or the Jeep® brand. All product names, logos, and brands are property of their respective owners. Our content is intended for educational and informational purposes, helping owners make informed decisions about their vehicles.
+veslife.biz.id is an independent publication and is not officially affiliated with FCA US LLC or the Jeep® brand. All product names, logos, and brands are property of their respective owners. Our content is intended for educational and informational purposes, helping owners make informed decisions about their vehicles.
 
 ---
-*Join us on the trail. Whether you are looking for the latest 4xe news or tips for your next overlanding build, welcome to the family.*
+*Join us on the trail. Whether you are looking for the latest 4xe news or tips for your next overlanding build, welcome to the VesLife family.*

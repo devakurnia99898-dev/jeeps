@@ -25,7 +25,7 @@ except ImportError:
     GOOGLE_LIBS_AVAILABLE = False
 
 # ==========================================
-# ⚙️ CONFIGURATION & SETUP
+# ⚙️ CONFIGURATION & SETUP (JEEP NICHE)
 # ==========================================
 
 GROQ_KEYS_RAW = os.environ.get("GROQ_API_KEY", "") 
@@ -39,22 +39,25 @@ if not GROQ_API_KEYS:
     print("❌ FATAL ERROR: Groq API Key is missing!")
     exit(1)
 
+# Diubah: Profil penulis menjadi nuansa otomotif/off-road
 AUTHOR_PROFILES = [
-    "Dave Harsya (Tactical Analyst)", "Sarah Jenkins (Senior Editor)",
-    "Luca Romano (Market Expert)", "Marcus Reynolds (League Correspondent)",
-    "Ben Foster (Data Journalist)"
+    "Dave Harsya (Off-road Specialist)", "Sarah Jenkins (Auto Gear Editor)",
+    "Luca Romano (Jeep Restorer)", "Marcus Reynolds (4x4 Tech Analyst)",
+    "Ben Foster (Overlanding Expert)"
 ]
 
+# Diubah: Kategori spesifik Jeep
 VALID_CATEGORIES = [
-    "Transfer News", "Premier League", "Champions League", 
-    "La Liga", "International", "Tactical Analysis"
+    "Wrangler & Gladiator", "Grand Cherokee", "Concept News", 
+    "Off-Road Guides", "Technical Specs", "EV & Hybrid 4xe"
 ]
 
+# Diubah: Sumber RSS khusus Jeep dan Otomotif
 RSS_SOURCES = {
-    "SkySports": "https://www.skysports.com/rss/12040",
-    "BBC Football": "https://feeds.bbci.co.uk/sport/football/rss.xml",
-    "ESPN FC": "https://www.espn.com/espn/rss/soccer/news",
-    "The Guardian": "https://www.theguardian.com/football/rss"
+    "Autoblog Jeep": "https://www.autoblog.com/category/jeep/rss.xml",
+    "Motor1 Jeep": "https://www.motor1.com/rss/make/jeep/",
+    "Mopar Insiders": "https://moparinsiders.com/feed/", 
+    "Jeep News": "https://www.autoevolution.com/rss/cars/jeep/"
 }
 
 CONTENT_DIR = "content/articles" 
@@ -143,11 +146,8 @@ def submit_to_google(url):
 def generate_robust_image(prompt, filename):
     output_path = f"{IMAGE_DIR}/{filename}"
     
-    # Keyword extraction untuk fallback
-    # Ambil kata kunci sederhana untuk pencarian gambar jika AI gagal
     clean_prompt = prompt.replace('"', '').replace("'", "")
     
-    # Headers standar
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Referer": "https://google.com"
@@ -155,10 +155,11 @@ def generate_robust_image(prompt, filename):
 
     print(f"      🎨 Generating Image...")
 
-    # --- ATTEMPT 1: HERCAI API (AI Generator - Usually Works) ---
+    # --- ATTEMPT 1: HERCAI API (AI Generator) ---
     try:
-        # Hercai v3 uses ProdIA/SDXL models
-        hercai_url = f"https://hercai.onrender.com/v3/text2image?prompt={requests.utils.quote(clean_prompt + ', realistic, 4k, sports action')}"
+        # Diubah: Menambahkan keyword visual spesifik Jeep/Automotive
+        visual_style = ", realistic, 4k, automotive photography, Jeep offroad, cinematic lighting"
+        hercai_url = f"https://hercai.onrender.com/v3/text2image?prompt={requests.utils.quote(clean_prompt + visual_style)}"
         resp = requests.get(hercai_url, headers=headers, timeout=40)
         
         if resp.status_code == 200:
@@ -173,12 +174,12 @@ def generate_robust_image(prompt, filename):
     except Exception as e:
         print(f"      ⚠️ Hercai Failed: {e}")
 
-    # --- ATTEMPT 2: POLLINATIONS TURBO (AI Generator - Lightweight) ---
+    # --- ATTEMPT 2: POLLINATIONS TURBO (AI Generator) ---
     try:
-        # Gunakan model Turbo, kadang blokirannya tidak seketat model Flux
         print("      🔄 Trying Pollinations Turbo...")
         seed = random.randint(1, 99999)
-        poly_url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(clean_prompt)}?width=1280&height=720&model=turbo&seed={seed}&nologo=true"
+        # Diubah: Prompt untuk mobil
+        poly_url = f"https://image.pollinations.ai/prompt/{requests.utils.quote('Jeep ' + clean_prompt)}?width=1280&height=720&model=turbo&seed={seed}&nologo=true"
         resp = requests.get(poly_url, headers=headers, timeout=20)
         
         if resp.status_code == 200:
@@ -192,12 +193,10 @@ def generate_robust_image(prompt, filename):
         pass
 
     # --- ATTEMPT 3: REAL PHOTO FALLBACK (LoremFlickr) ---
-    # Jika semua AI Gagal/Diblokir, ambil foto asli dari Flickr.
-    # Ini MENJAMIN gambar tidak akan rusak/pecah.
     try:
         print("      🔄 Trying Real Photo Fallback (LoremFlickr)...")
-        # Keywords: football, stadium, soccer
-        keywords = "football,soccer,stadium"
+        # Diubah: Keyword pencarian gambar asli menjadi Jeep
+        keywords = "jeep,wrangler,offroad,4x4"
         flickr_url = f"https://loremflickr.com/1280/720/{keywords}/all"
         
         resp = requests.get(flickr_url, headers=headers, timeout=20, allow_redirects=True)
@@ -211,7 +210,8 @@ def generate_robust_image(prompt, filename):
 
     # --- EMERGENCY: DEFAULT ---
     print("      ⚠️ ALL METHODS FAILED. Using static default.")
-    return "/images/default-football.webp"
+    # Pastikan Anda memiliki gambar default ini atau script akan error saat build
+    return "/images/default-jeep.webp"
 
 # ==========================================
 # 🧠 CONTENT ENGINE
@@ -220,15 +220,16 @@ def generate_robust_image(prompt, filename):
 def get_groq_article_json(title, summary, link, author_name):
     current_date = datetime.now().strftime("%Y-%m-%d")
     
+    # Diubah: System Prompt untuk Jurnalis Otomotif
     system_prompt = f"""
-    You are {author_name}, a professional sports journalist.
+    You are {author_name}, a professional automotive journalist specializing in the Jeep brand and off-road culture.
     CURRENT DATE: {current_date}.
     
-    OBJECTIVE: Write a high-quality, 800-word analysis article.
+    OBJECTIVE: Write a high-quality, 800-word analysis article about Jeep vehicles or industry news.
     
     OUTPUT FORMAT:
     JSON Object keys: "title", "description", "category", "main_keyword", "tags", "content_body".
-    "main_keyword" should be a short visual description (e.g. "football stadium crowd" or "soccer player running").
+    "main_keyword" should be a short visual description for image generation (e.g. "red Jeep Wrangler rubbing mud", "Jeep Gladiator interior", "Jeep grille close up").
     """
     
     user_prompt = f"""
@@ -237,7 +238,7 @@ def get_groq_article_json(title, summary, link, author_name):
     - Summary: {summary}
     - Link: {link}
     
-    TASK: Write the article now using MARKDOWN.
+    TASK: Write the article now using MARKDOWN. Focus on technical details, performance, or lifestyle appeal.
     """
     
     for api_key in GROQ_API_KEYS:
@@ -269,7 +270,7 @@ def main():
     os.makedirs(IMAGE_DIR, exist_ok=True)
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    print("🔥 ENGINE STARTED: SURVIVAL MODE")
+    print("🔥 ENGINE STARTED: JEEP EDITION (SURVIVAL MODE)")
 
     for source_name, rss_url in RSS_SOURCES.items():
         print(f"\n📡 Reading: {source_name}")
@@ -299,7 +300,7 @@ def main():
                 print("      ❌ JSON Parse Error")
                 continue
 
-            # Generate Image (Dengan Sistem Lapis 3)
+            # Generate Image (Dengan keyword Jeep)
             image_prompt = data.get('main_keyword', clean_title)
             final_img_path = generate_robust_image(image_prompt, f"{slug}.webp")
             
@@ -309,7 +310,7 @@ def main():
             final_body = clean_body + "\n\n### Read More\n" + links_md
             
             if data.get('category') not in VALID_CATEGORIES:
-                data['category'] = "International"
+                data['category'] = "Jeep News" # Default fallback category
 
             md_content = f"""---
 title: "{data['title'].replace('"', "'")}"

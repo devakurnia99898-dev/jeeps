@@ -82,15 +82,9 @@ def save_link_to_memory(title, slug):
     os.makedirs(DATA_DIR, exist_ok=True)
     memory = load_link_memory()
     memory[title] = f"/articles/{slug}" 
-    if len(memory) > 200: memory = dict(list(memory.items())[-200:])
+    # Simpan lebih banyak history untuk Silo Linking yang lebih baik
+    if len(memory) > 500: memory = dict(list(memory.items())[-500:])
     with open(MEMORY_FILE, 'w') as f: json.dump(memory, f, indent=2)
-
-def get_internal_links_list():
-    memory = load_link_memory()
-    items = list(memory.items())
-    if not items: return []
-    count = min(3, len(items))
-    return random.sample(items, count)
 
 def fetch_rss_feed(url):
     headers = {
@@ -107,6 +101,7 @@ def clean_ai_content(text):
     text = re.sub(r'\n```$', '', text)
     text = text.replace("```", "")
     text = re.sub(r'^##\s*(Introduction|Conclusion|Summary|The Verdict|Final Thoughts|In Conclusion)\s*\n', '', text, flags=re.MULTILINE|re.IGNORECASE)
+    
     text = text.replace("<h1>", "# ").replace("</h1>", "\n")
     text = text.replace("<h2>", "## ").replace("</h2>", "\n")
     text = text.replace("<h3>", "### ").replace("</h3>", "\n")
@@ -115,13 +110,51 @@ def clean_ai_content(text):
     text = text.replace("<p>", "").replace("</p>", "\n\n")
     return text.strip()
 
-def inject_links_into_body(content_body):
-    links = get_internal_links_list()
+# ==========================================
+# 🧠 SMART SILO LINKING (AUTHORITY BOOSTER)
+# ==========================================
+def get_contextual_links(current_title):
+    """
+    Mencari link yang RELEVAN berdasarkan kata kunci di judul.
+    Jika tidak ada yang relevan, baru ambil random.
+    Ini menciptakan struktur 'Silo' yang disukai Google.
+    """
+    memory = load_link_memory()
+    items = list(memory.items())
+    if not items: return []
+    
+    # Ekstrak kata kunci sederhana (hapus kata sambung)
+    stop_words = ['the', 'a', 'an', 'in', 'on', 'at', 'for', 'to', 'of', 'and', 'with', 'is', 'jeep'] 
+    keywords = [w.lower() for w in current_title.split() if w.lower() not in stop_words and len(w) > 3]
+    
+    relevant_links = []
+    
+    # Cari judul yang mengandung kata kunci sama
+    for title, url in items:
+        title_lower = title.lower()
+        match_score = sum(1 for k in keywords if k in title_lower)
+        if match_score > 0:
+            relevant_links.append((title, url))
+    
+    # Jika ada link relevan, ambil max 3
+    if relevant_links:
+        # Prioritaskan yang paling relevan, lalu acak sedikit agar variatif
+        count = min(3, len(relevant_links))
+        return random.sample(relevant_links, count)
+    
+    # Fallback: Ambil random jika belum ada konten relevan
+    count = min(3, len(items))
+    return random.sample(items, count)
+
+def inject_links_into_body(content_body, current_title):
+    links = get_contextual_links(current_title)
     if not links: return content_body
-    link_box = "\n\n> **🚙 Don't Miss:**\n"
+
+    link_box = "\n\n> **🚙 Related Topics:**\n"
     for title, url in links:
         link_box += f"> - [{title}]({url})\n"
     link_box += "\n"
+
     paragraphs = content_body.split('\n\n')
     if len(paragraphs) < 4: return content_body + link_box
     insert_pos = random.randint(1, 2) 
@@ -157,21 +190,16 @@ def submit_to_google(url):
     except Exception as e: print(f"      ⚠️ Google Indexing Error: {e}")
 
 # ==========================================
-# 🎨 JEEP-SPECIFIC IMAGE GENERATOR (FIXED)
+# 🎨 IMAGE GENERATOR (FORCE JEEP STYLE)
 # ==========================================
 def generate_robust_image(prompt, filename):
     output_path = f"{IMAGE_DIR}/{filename}"
-    
-    # 1. BERSIHKAN PROMPT DARI KATA "SEDAN" / "BMW" DLL
     forbidden_words = ["sedan", "coupe", "bmw", "mercedes", "toyota", "low car", "sports car", "track car"]
     clean_prompt = prompt.lower().replace('"', '').replace("'", "")
     for word in forbidden_words:
         clean_prompt = clean_prompt.replace(word, "")
     
-    # 2. PAKSA KATA KUNCI JEEP (INJECTION)
-    # Ini memastikan apapun yang ditulis AI, output gambarnya tetap mobil tinggi/boxy
     forced_style = "Jeep Wrangler style SUV, rugged 4x4, boxy off-road vehicle, seven slot grille, lifted suspension, big tires, cinematic automotive photography, realistic 8k"
-    
     final_prompt = f"{clean_prompt}, {forced_style}"
     
     headers = {
@@ -181,10 +209,9 @@ def generate_robust_image(prompt, filename):
 
     print(f"      🎨 Generating Image: {clean_prompt[:30]}...")
 
-    # STRATEGY 1: POLLINATIONS (Biasanya lebih patuh prompt mobil)
+    # 1. POLLINATIONS (Priority)
     try:
         seed = random.randint(1, 99999)
-        # Model 'flux' biasanya sangat bagus untuk mobil realistis
         poly_url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(final_prompt)}?width=1280&height=720&model=flux&seed={seed}&nologo=true"
         resp = requests.get(poly_url, headers=headers, timeout=25)
         if resp.status_code == 200:
@@ -194,7 +221,7 @@ def generate_robust_image(prompt, filename):
             return f"/images/{filename}"
     except Exception: pass
 
-    # STRATEGY 2: HERCAI AI (Fallback)
+    # 2. HERCAI (Fallback)
     try:
         hercai_url = f"https://hercai.onrender.com/v3/text2image?prompt={requests.utils.quote(final_prompt)}"
         resp = requests.get(hercai_url, headers=headers, timeout=40)
@@ -208,8 +235,7 @@ def generate_robust_image(prompt, filename):
                 return f"/images/{filename}"
     except Exception: pass
 
-    # STRATEGY 3: FLICKR FALLBACK (Safe Mode)
-    # Kita cari 'wrangler' spesifik agar pasti Jeep
+    # 3. FLICKR (Final Safety)
     try:
         flickr_url = f"https://loremflickr.com/1280/720/jeep,wrangler,rubicon/all"
         resp = requests.get(flickr_url, headers=headers, timeout=20, allow_redirects=True)
@@ -223,7 +249,7 @@ def generate_robust_image(prompt, filename):
     return "/images/default-jeep.webp"
 
 # ==========================================
-# 🧠 CONTENT ENGINE (PRO WITH TABLES)
+# 🧠 CONTENT ENGINE (PRO + FAQ SCHEMA)
 # ==========================================
 
 def get_groq_article_json(title, summary, link, author_name):
@@ -244,22 +270,19 @@ def get_groq_article_json(title, summary, link, author_name):
     OBJECTIVE: Write a high-quality, data-rich article about Jeep/Off-road.
     STRUCTURE STYLE: {chosen_structure}.
     
-    🚫 NEGATIVE CONSTRAINTS:
-    1. NEVER use headers named "Introduction", "Conclusion", "Summary".
-    2. NEVER start with "In this article...".
-    
-    ✅ MANDATORY REQUIREMENTS:
-    1. **DATA TABLE IS A MUST**: You MUST include a Markdown Table (Specs, Pros/Cons, or Key Facts).
-    2. **VISUAL KEYWORD RULE**: For the 'main_keyword' field, you MUST describe a JEEP vehicle. Do not use generic words like "car" or "testing". Use specific terms like "Lifted Jeep Wrangler crawling rocks" or "Jeep Grand Cherokee interior".
-    3. **HIERARCHY**: Use H2, H3, H4.
+    ✅ MANDATORY REQUIREMENTS (TO BOOST AUTHORITY):
+    1. **DATA TABLE**: Include a Markdown Table (Specs/Pros-Cons).
+    2. **FAQ SECTION**: At the very end, include a '## Frequently Asked Questions' section with 3 common questions related to the topic.
+    3. **VISUAL KEYWORD**: Describe a JEEP vehicle strictly.
+    4. **HIERARCHY**: H2, H3, H4.
     
     OUTPUT FORMAT (JSON):
     {{
-        "title": "Catchy SEO Title (No Clickbait)",
+        "title": "Catchy SEO Title",
         "description": "Meta description (150 chars)",
         "category": "One of: {', '.join(VALID_CATEGORIES)}",
-        "main_keyword": "Visual prompt description (e.g., 'Green Jeep Wrangler in mud')",
-        "tags": ["tag1", "tag2", "tag3"],
+        "main_keyword": "Jeep visual prompt...",
+        "tags": ["tag1", "tag2"],
         "content_body": "Full markdown content..."
     }}
     """
@@ -270,7 +293,7 @@ def get_groq_article_json(title, summary, link, author_name):
     - Summary: {summary}
     - Link: {link}
     
-    Write the article now. INCLUDE A TABLE.
+    Write now. INCLUDE TABLE + FAQ Section.
     """
     
     for api_key in GROQ_API_KEYS:
@@ -302,7 +325,7 @@ def main():
     os.makedirs(IMAGE_DIR, exist_ok=True)
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    print("🔥 ENGINE STARTED: VESLIFE PRO EDITION (IMAGE FIX + TABLES)")
+    print("🔥 ENGINE STARTED: VESLIFE AUTHORITY EDITION (SILO + IMAGE FIX)")
 
     for source_name, rss_url in RSS_SOURCES.items():
         print(f"\n📡 Reading: {source_name}")
@@ -342,8 +365,8 @@ def main():
             # 2. Clean Content
             clean_body = clean_ai_content(data['content_body'])
             
-            # 3. Inject Links
-            final_body_with_links = inject_links_into_body(clean_body)
+            # 3. Inject Contextual Links (Siloing)
+            final_body_with_links = inject_links_into_body(clean_body, data['title'])
             
             # 4. Fallback Category
             if data.get('category') not in VALID_CATEGORIES:

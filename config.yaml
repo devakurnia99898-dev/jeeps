@@ -39,8 +39,8 @@ taxonomies:
   tag: "tags"
 
 params:
-  description: "Your #1 source for breaking Sports news, live scores, transfer rumors (Fabrizio Romano), and tactical analysis for Premier League, La Liga, & Champions League."
-  defaultImage: "/images/default-football.jpg"
+  description: "Your #1 source for breaking Jeeps news, Jeeps Offroad news from Around the World."
+  defaultImage: "/images/default-Jeeps.jpg"
   author:
-    name: "beastion.biz.id Team"
-    email: "contact@Sportdaily.com"
+    name: "JeepMe Team"
+    email: "contact@JeepMe.com"

@@ -39,7 +39,7 @@ taxonomies:
   tag: "tags"
 
 params:
-  description: "Your #1 source for breaking Jeeps news, Jeeps Offroad news from Around the World."
+  description: "Your #1 source for breaking Jeeps news."
   defaultImage: "/images/default-Jeeps.jpg"
   author:
     name: "JeepMe Team"

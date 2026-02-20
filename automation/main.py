@@ -25,7 +25,7 @@ except ImportError:
     GOOGLE_LIBS_AVAILABLE = False
 
 # ==========================================
-# ⚙️ CONFIGURATION & SETUP (VESLIFE / JEEP DIY NICHE)
+# ⚙️ CONFIGURATION & SETUP (VESLIFE / JEEP MECHANIC)
 # ==========================================
 
 GROQ_KEYS_RAW = os.environ.get("GROQ_API_KEY", "") 
@@ -39,7 +39,7 @@ if not GROQ_API_KEYS:
     print("❌ FATAL ERROR: Groq API Key is missing!")
     exit(1)
 
-# 🔥 AUTHOR BARU: Persona Mekanik & Ahli DIY (AdSense Friendly)
+# 🔥 AUTHOR BARU: Persona Mekanik & Ahli DIY
 AUTHOR_PROFILES = [
     "Dave Harsya (Certified 4x4 Mechanic)", 
     "Sarah Jenkins (Overland Build Expert)",
@@ -48,18 +48,19 @@ AUTHOR_PROFILES = [
     "Ben Foster (Trail Recovery Instructor)"
 ]
 
-# Kategori Spesifik (Lebih ke Teknis/Guide)
+# Kategori Spesifik (Teknis/Guide)
 VALID_CATEGORIES = [
     "Wrangler & Gladiator", "Grand Cherokee", "Maintenance Guides", 
     "Off-Road Mods", "Troubleshooting", "EV & Hybrid 4xe"
 ]
 
-# Sumber tetap sama, tapi cara olahnya beda
+# Sumber RSS (Updated & Stabil)
 RSS_SOURCES = {
     "Autoblog Jeep": "https://www.autoblog.com/category/jeep/rss.xml",
-    "Motor1 Jeep": "https://www.motor1.com/rss/make/jeep/",
+    "Motor1 News": "https://www.motor1.com/rss/news/all/",
     "Mopar Insiders": "https://moparinsiders.com/feed/", 
-    "Jeep News": "https://www.autoevolution.com/rss/cars/jeep/"
+    "Jeep News": "https://www.autoevolution.com/rss/cars/jeep/",
+    "Jalopnik": "https://jalopnik.com/rss"
 }
 
 CONTENT_DIR = "content/articles" 
@@ -67,7 +68,7 @@ IMAGE_DIR = "static/images"
 DATA_DIR = "automation/data"
 MEMORY_FILE = f"{DATA_DIR}/link_memory.json"
 
-# Target moderat agar kualitas terjaga
+# Target per sumber (Total bisa 8-10 artikel per run)
 TARGET_PER_SOURCE = 2
 
 # ==========================================
@@ -87,13 +88,37 @@ def save_link_to_memory(title, slug):
     with open(MEMORY_FILE, 'w') as f: json.dump(memory, f, indent=2)
 
 def fetch_rss_feed(url):
+    """
+    Mengambil RSS dengan Header Browser Lengkap (Anti-Block)
+    """
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Referer': 'https://www.google.com/',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
     }
+    
     try:
-        response = requests.get(url, headers=headers, timeout=15)
-        return feedparser.parse(response.content) if response.status_code == 200 else None
-    except: return None
+        print(f"      ... Menghubungi Server...")
+        response = requests.get(url, headers=headers, timeout=20)
+        
+        if response.status_code == 200:
+            feed = feedparser.parse(response.content)
+            if len(feed.entries) > 0:
+                print(f"      ✅ Berhasil! Ditemukan {len(feed.entries)} artikel.")
+                return feed
+            else:
+                print(f"      ⚠️ Status 200 OK, tapi RSS Kosong/Format Salah.")
+                return None
+        else:
+            print(f"      ❌ Gagal: HTTP Status {response.status_code}")
+            return None
+            
+    except Exception as e:
+        print(f"      ❌ Error Koneksi: {e}")
+        return None
 
 def clean_ai_content(text):
     if not text: return ""
@@ -104,7 +129,7 @@ def clean_ai_content(text):
     # Hapus Intro/Outro Basi
     text = re.sub(r'^##\s*(Introduction|Conclusion|Summary|The Verdict|Final Thoughts|In Conclusion)\s*\n', '', text, flags=re.MULTILINE|re.IGNORECASE)
     
-    # Formatting
+    # Formatting Markdown
     text = text.replace("<h1>", "# ").replace("</h1>", "\n")
     text = text.replace("<h2>", "## ").replace("</h2>", "\n")
     text = text.replace("<h3>", "### ").replace("</h3>", "\n")
@@ -114,7 +139,7 @@ def clean_ai_content(text):
     return text.strip()
 
 # ==========================================
-# 📑 AUTO TOC (NAVIGASI PENTING)
+# 📑 AUTO TOC (NAVIGASI)
 # ==========================================
 def generate_toc(content_body):
     toc_lines = ["**Table of Contents**\n"]
@@ -267,7 +292,6 @@ def generate_robust_image(prompt, filename):
 def get_groq_article_json(title, summary, link, author_name):
     current_date = datetime.now().strftime("%Y-%m-%d")
     
-    # 🔥 STRUKTUR BARU: Solusi & How-To Focus
     structures = [
         "HOW_TO_GUIDE (Step-by-step installation or fix)",
         "TROUBLESHOOTING_ANALYSIS (Symptoms, Diagnosis, Solution)",
@@ -281,24 +305,24 @@ def get_groq_article_json(title, summary, link, author_name):
     You are {author_name}, an expert Jeep mechanic and off-road instructor.
     Current Date: {current_date}.
     
-    INPUT CONTEXT: You will receive a news headline/summary about Jeep.
-    YOUR TASK: Do NOT just report the news. Instead, **pivot the topic into a practical GUIDE or ANALYSIS for owners**.
+    INPUT CONTEXT: You will receive a news headline/summary about Jeep/Automotive.
+    
+    CRITICAL TASK:
+    If news is about JEEP/Offroad: Pivot into a practical GUIDE/ANALYSIS.
+    If news is about OTHER BRAND (e.g. Ford/Toyota): Pivot to compare it with Jeep or what Jeep owners can learn.
     
     Example Pivot:
-    - Input: "Jeep recalls 2024 Wrangler for fuel pump."
-    - Output Title: "How to Check Your Wrangler Fuel Pump (Recall Guide & Symptoms)"
-    
-    - Input: "Jeep announces new 20-inch wheels."
-    - Output Title: "Pros and Cons of 20-inch Wheels for Off-Roading: A Mechanic's Take"
+    - Input: "Jeep recalls Wrangler for fuel pump." -> Output Title: "How to Check Your Wrangler Fuel Pump (Recall Guide)"
+    - Input: "New Ford Bronco Released" -> Output Title: "Bronco vs Wrangler: A Mechanic's Comparison Guide"
     
     ✅ MANDATORY SECTIONS (ADSENSE REQUIREMENTS):
-    1. **AT A GLANCE TABLE**: A Markdown table with keys: Difficulty, Time Required, Cost Est., Tools Needed.
+    1. **AT A GLANCE TABLE**: Markdown table with keys: Difficulty, Time Required, Cost Est., Tools Needed.
     2. **TOOLS LIST**: Bullet points of tools/parts needed.
     3. **STEP-BY-STEP**: Use H3 headers for steps (e.g., "### Step 1: Disconnect Battery").
     4. **FAQ**: 3 common questions.
     
     🚫 FORBIDDEN:
-    - No generic "Introduction" header.
+    - No "Introduction" header.
     - No "In conclusion".
     
     OUTPUT FORMAT (JSON):
@@ -317,7 +341,7 @@ def get_groq_article_json(title, summary, link, author_name):
     - Headline: {title}
     - Summary: {summary}
     
-    Convert this into a USEFUL GUIDE or TECHNICAL ANALYSIS for Jeep owners.
+    Convert this into a USEFUL GUIDE or TECHNICAL ANALYSIS.
     Structure: {chosen_structure}.
     """
     
@@ -331,7 +355,7 @@ def get_groq_article_json(title, summary, link, author_name):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.5, # Lebih rendah agar lebih akurat/teknis
+                temperature=0.5, 
                 max_tokens=6500,
                 response_format={"type": "json_object"}
             )
@@ -365,7 +389,7 @@ def main():
                 break
             
             clean_title = entry.title.split(" - ")[0]
-            # Slug dari judul asli dulu, nanti kontennya yang berubah jadi guide
+            # Slug dari judul asli dulu
             slug = slugify(clean_title, max_length=60, word_boundary=True)
             filename = f"{slug}.md"
             
@@ -401,7 +425,7 @@ def main():
             toc_content = generate_toc(clean_body)
             body_with_links = inject_links_into_body(clean_body, data['title'])
             
-            # Gabungkan
+            # Gabungkan: TOC + Body
             final_body = toc_content + body_with_links
             
             # 4. Fallback Category

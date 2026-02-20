@@ -286,77 +286,87 @@ def generate_robust_image(prompt, filename):
     return "/images/default-jeep.webp"
 
 # ==========================================
-# 🧠 CONTENT ENGINE (THE DIY MECHANIC PROMPT)
+# 🧠 CONTENT ENGINE (THE DEEP DIVE PROMPT 1500+ WORDS)
 # ==========================================
 
 def get_groq_article_json(title, summary, link, author_name):
     current_date = datetime.now().strftime("%Y-%m-%d")
     
-    structures = [
-        "HOW_TO_GUIDE (Step-by-step installation or fix)",
-        "TROUBLESHOOTING_ANALYSIS (Symptoms, Diagnosis, Solution)",
-        "MAINTENANCE_CHECKLIST (Long term care, fluid changes, inspection)",
-        "MODIFICATION_GUIDE (Pros/Cons of a specific upgrade based on the news)"
-    ]
-    chosen_structure = random.choice(structures)
-
-    # 💡 SYSTEM PROMPT YANG MENGUBAH BERITA JADI SOLUSI
+    # 🔥 SYSTEM PROMPT YANG "MEMAKSA" PANJANG & LENGKAP
     system_prompt = f"""
-    You are {author_name}, an expert Jeep mechanic and off-road instructor.
+    You are {author_name}, a Master Jeep Mechanic and Off-road Engineer with 20 years of experience.
     Current Date: {current_date}.
     
-    INPUT CONTEXT: You will receive a news headline/summary about Jeep/Automotive.
+    OBJECTIVE: Write a COMPREHENSIVE, LONG-FORM guide (Target: 1500+ words).
+    INPUT CONTEXT: You will receive a headline. You must PIVOT this into a Deep Dive Technical Guide.
     
-    CRITICAL TASK:
-    If news is about JEEP/Offroad: Pivot into a practical GUIDE/ANALYSIS.
-    If news is about OTHER BRAND (e.g. Ford/Toyota): Pivot to compare it with Jeep or what Jeep owners can learn.
+    RULE: Do NOT write a short news summary. Use the headline as a seed, then EXPAND using your expert knowledge about the specific Jeep models mentioned.
     
-    Example Pivot:
-    - Input: "Jeep recalls Wrangler for fuel pump." -> Output Title: "How to Check Your Wrangler Fuel Pump (Recall Guide)"
-    - Input: "New Ford Bronco Released" -> Output Title: "Bronco vs Wrangler: A Mechanic's Comparison Guide"
+    ✅ MANDATORY ARTICLE STRUCTURE (DO NOT SKIP ANY SECTION):
     
-    ✅ MANDATORY SECTIONS (ADSENSE REQUIREMENTS):
-    1. **AT A GLANCE TABLE**: Markdown table with keys: Difficulty, Time Required, Cost Est., Tools Needed.
-    2. **TOOLS LIST**: Bullet points of tools/parts needed.
-    3. **STEP-BY-STEP**: Use H3 headers for steps (e.g., "### Step 1: Disconnect Battery").
-    4. **FAQ**: 3 common questions.
-    
-    🚫 FORBIDDEN:
-    - No "Introduction" header.
-    - No "In conclusion".
+    1. **The Diagnostic / The Situation** (H2):
+       - Explain the technical background. Why is this important?
+       - Symptoms or Signs to look for.
+       
+    2. **Technical Deep Dive** (H2):
+       - How the system works (Engine, Suspension, or Electrical).
+       - Common failure points (be specific, e.g., "The plastic impeller in the water pump").
+       
+    3. **Pre-Work Checklist** (H2):
+       - **At a Glance Table** (Markdown): Difficulty (1-5), Time, Cost, DIY vs Shop.
+       - **Tools Required** (H3): Detailed bullet points (e.g., "10mm Socket", "Torque Wrench").
+       - **Safety Warnings** (H3): Critical safety info.
+       
+    4. **Step-by-Step Guide** (H2):
+       - THIS MUST BE THE LONGEST SECTION.
+       - Use H3 (###) for each major step.
+       - Use H4 (####) for detailed sub-steps.
+       - Include specific torque specs (Nm/ft-lbs) where relevant.
+       
+    5. **Pro Tips & Common Mistakes** (H2):
+       - "Don't do this" advice.
+       - Tricks of the trade.
+       
+    6. **Cost Analysis: DIY vs Mechanic** (H2):
+       - Breakdown of parts cost vs labor cost.
+       
+    7. **Frequently Asked Questions** (H2):
+       - 5 Detailed FAQs relevant to the topic.
     
     OUTPUT FORMAT (JSON):
     {{
-        "title": "A 'How-to' or 'Guide' style title",
-        "description": "Meta description (150 chars) focusing on solution",
+        "title": "A detailed 'How-to' or 'Ultimate Guide' title",
+        "description": "Meta description (160 chars) focusing on solution",
         "category": "One of: {', '.join(VALID_CATEGORIES)}",
-        "main_keyword": "Mechanic working on Jeep [part name]...",
-        "tags": ["diy", "maintenance", "guide"],
-        "content_body": "Full markdown content..."
+        "main_keyword": "Mechanic working on Jeep [specific part]...",
+        "tags": ["diy", "maintenance", "guide", "jeep tech"],
+        "content_body": "Full markdown content with all sections above..."
     }}
     """
     
     user_prompt = f"""
-    SOURCE NEWS:
-    - Headline: {title}
-    - Summary: {summary}
+    SOURCE NEWS HEADLINE: "{title}"
+    SOURCE SUMMARY: "{summary}"
     
-    Convert this into a USEFUL GUIDE or TECHNICAL ANALYSIS.
-    Structure: {chosen_structure}.
+    TASK: Ignore the length of the source. Use your EXPERT KNOWLEDGE to write a 1500-word Masterclass Guide based on this topic.
+    If the news is about a new model, write a "Technical Prep Guide" for it.
+    If the news is generic, write a "Maintenance Masterclass" related to the keyword.
+    
+    GO DEEP. DON'T BE LAZY.
     """
     
     for api_key in GROQ_API_KEYS:
         client = Groq(api_key=api_key)
         try:
-            print(f"      🤖 AI Writing ({chosen_structure.split()[0]})...")
+            print(f"      🤖 AI Writing (DEEP DIVE MODE - 1500+ Words)...")
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.5, 
-                max_tokens=6500,
+                temperature=0.6, # Sedikit kreatif agar bisa expand panjang
+                max_tokens=7000, # Max token ditingkatkan
                 response_format={"type": "json_object"}
             )
             return completion.choices[0].message.content
@@ -374,7 +384,7 @@ def main():
     os.makedirs(IMAGE_DIR, exist_ok=True)
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    print("🔥 ENGINE STARTED: VESLIFE 'MECHANIC' EDITION (HOW-TO & GUIDES)")
+    print("🔥 ENGINE STARTED: VESLIFE 'MECHANIC PRO' (LONG FORM 1500+ WORDS)")
 
     for source_name, rss_url in RSS_SOURCES.items():
         print(f"\n📡 Reading: {source_name}")

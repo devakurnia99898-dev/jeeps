@@ -475,7 +475,7 @@ weight: {random.randint(1, 10)}
             processed_count += 1
             
             print("      💤 Sleeping for 120s...")
-            time.sleep(120)
+            time.sleep(60)
 
 if __name__ == "__main__":
     main()
